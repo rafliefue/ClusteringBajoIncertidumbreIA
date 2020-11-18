@@ -50,8 +50,8 @@ def findCircle(x1, y1, x2, y2, x3, y3): #FUNCION OBTENIDA DE https://www.geeksfo
     # r is the radius  
     r = round(math.sqrt(sqr_of_r), 5);  
   
-    print("Centre = (", h, ", ", k, ")");  
-    print("Radius = ", r);  
+    print("Centro = (", h, ", ", k, ")");  
+    print("Radio = ", r);  
 
     return h, k, r
 
@@ -183,6 +183,10 @@ def calculaGradosPertenencias(puntosTotales, x, y, radios, n_clusters):
         gradosPorCluster.append(gradosDeLosPuntosPertenecientesAlCluster)
     
     
+    print("Lista de Puntos separados por Cluster:", puntosPorCluster)
+    
+    print("------------------------------------------------------------------------------------")
+    
     return puntosPorCluster, gradosPorCluster
     
 
@@ -251,13 +255,26 @@ def buscandoAproximarLasCircunferencias(): #Calculo del grado de pertenencia ini
 
     puntosCSV = pd.read_csv('puntos.csv', header=None, names=['X', 'Y'])
     
-    for i in range(20):
-        
-        print("LOOP")
-        
-        p1, p2 = calculaGradosPertenencias(puntosCSV, x, y, radios, 2)
+    valorParada = 0.05
     
-        x, y, radios = nuevasCircunferencias(puntosCSV, p1, p2, 2)
+    sumGradosTotal = 10
+    
+    while sumGradosTotal > 0.05:
+        
+        puntosPorCluster, gradosPorCluster = calculaGradosPertenencias(puntosCSV, x, y, radios, 2)
+        
+        #CONDICIÓN DE PARADA
+        for i in range(0, len(gradosPorCluster)):
+            
+            mediaGradosCluster = sum(gradosPorCluster[i])/len(gradosPorCluster[i])
+            
+            sumGradosTotal =  sumGradosTotal + mediaGradosCluster
+            
+        sumGradosTotal = sumGradosTotal/len(gradosPorCluster) #Esta es la media de grados juntando todos los cluster
+        
+        print("Valor de Condición de parada:", sumGradosTotal)
+        
+        x, y, radios = nuevasCircunferencias(puntosCSV, puntosPorCluster, gradosPorCluster, 2)
     
         representacionGrafica(x, y, radios)
     

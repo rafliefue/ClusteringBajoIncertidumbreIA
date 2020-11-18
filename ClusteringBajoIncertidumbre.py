@@ -114,7 +114,7 @@ def representacionGrafica(x, y, radios):  #Hay que dar los centros y los radios
     plt.show()
      
 
-def buscandoAproximarLasCircunferencias(): #Calculo del grado de pertenencia inicial y muestra gr�fica
+def buscandoAproximarLasCircunferencias(): #Calculo del grado de pertenencia inicial y muestra gráfica
     
     x, y, radios = inicializacion()
 
@@ -124,7 +124,7 @@ def buscandoAproximarLasCircunferencias(): #Calculo del grado de pertenencia ini
     
     for i in range(0, len(puntosCSV)):
         
-        punto = puntosCSV.values[i] #Obtenemos el valor del punto en el �ndice 'i'
+        punto = puntosCSV.values[i] #Obtenemos el valor del punto en el índice 'i'
         
         varX = punto[0]
         varY = punto[1]
@@ -134,7 +134,7 @@ def buscandoAproximarLasCircunferencias(): #Calculo del grado de pertenencia ini
         
         #Ahora hay que calcular la distancia del 'punto' a los centros de los cluster
         
-        for j in range(2): #En vez de dos deber�a ser el n� de clusters
+        for j in range(2): #En vez de dos deberá ser el nº de clusters
             
                 centroCluster = []
                 centroCluster.append(x[j])
@@ -166,7 +166,7 @@ def buscandoAproximarLasCircunferencias(): #Calculo del grado de pertenencia ini
             
         print("Grados de Pertenencia NORMALIZADOS del punto", punto, ":", gradosPertenenciaNormalizados)   
               
-        #El punto pertenece al c�rculo con grado de menor valor      
+        #El punto pertenece al círculo con grado de menor valor      
         minpos = gradosPertenenciaNormalizados.index(min(gradosPertenenciaNormalizados))    
              
         print("El punto:", punto, "pertenece a la circunferencia:", minpos + 1)
@@ -179,7 +179,7 @@ def buscandoAproximarLasCircunferencias(): #Calculo del grado de pertenencia ini
 
     representacionGrafica(x, y, radios)  
     
-    print("SEGUNDA ITERACCI�N")
+    print("SEGUNDA ITERACCIÓN")
     
     
 

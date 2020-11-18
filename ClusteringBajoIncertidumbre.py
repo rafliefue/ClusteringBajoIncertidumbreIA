@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import math
 import csv
+from heapq import nsmallest
 
 def findCircle(x1, y1, x2, y2, x3, y3): #FUNCION OBTENIDA DE https://www.geeksforgeeks.org/equation-of-circle-when-three-points-on-the-circle-are-given/
     x12 = x1 - x2;  
@@ -55,7 +56,137 @@ def findCircle(x1, y1, x2, y2, x3, y3): #FUNCION OBTENIDA DE https://www.geeksfo
     return h, k, r
 
 
-def inicializacion(): #Inicializa los circulos
+def nuevasCircunferencias(puntosTotales, puntosPorCluster, gradosPorCluster, n_clusters): #Le daré el conjunto de puntos que pertenecen a esa circunferencia, tras ello usaré los 3 puntos con mejor grado de pertenencia para calcular el nuevo radio, y el centro será la media de todos los puntos
+    #Este algoritmo estará basado en findCircle, k-medias, y mi propia lógica
+    
+    #Por cada Circunferencia, voy a calcular su nuevo radio y centro
+    
+    x = [] #Lista con las variables X de cada centro
+    y = [] #Lista con las variables Y de cada centro
+    r = [] #Lista con los radios de cada centro
+    
+    for i in range(n_clusters): #Recorro cada cluster
+        
+        puntos = puntosPorCluster[i] #Obtengo los puntos de ese cluster
+        grados = gradosPorCluster[i] #Obtengo los grados de ese cluster
+        
+        #BUSCANDO EL NUEVO CENTRO
+        
+        sumX = 0 
+        sumY = 0
+        
+        for j in range(0, len(puntos)):
+            
+            punto = puntos[j]
+            
+            sumX = punto[0] + sumX
+            sumY = punto[1] + sumY
+            
+            
+        nuevoCentroX = sumX/len(puntos)
+        nuevoCentroY = sumY/len(puntos)
+        
+        x.append(nuevoCentroX)
+        y.append(nuevoCentroY)
+        
+        print("El nuevo centro de la circunferencia", i+1, "es: (", x[i], ",", y[i], ")")
+        
+        #BUSCANDO EL NUEVO RADIO   
+
+        punto1, punto2, punto3 = random.sample(puntos, 3) #cojo tres puntos aleatorios, ya que con los tres mejores puntos el algoritmo se quedaba pillado en algunos puntos
+        
+        tresPuntos = []
+        
+        tresPuntos.append(punto1)
+        tresPuntos.append(punto2)
+        tresPuntos.append(punto3)
+
+        distanciaDePuntoACentro = 0
+        
+        for j in range(0, 3):
+            
+            punto = tresPuntos[j]
+            
+            varX = punto[0]
+            varY = punto[1]
+            
+            distanciaDePuntoACentro = math.sqrt(((x[i] - varX)*(x[i] - varX)) + ((y[i] - varY)*(y[i] - varY))) + distanciaDePuntoACentro
+                       
+        nuevoRadio = distanciaDePuntoACentro/len(tresPuntos)        
+                  
+        r.append(nuevoRadio)
+        
+        print("El nuevo radio de la circunferencia", i+1, "es: (", r[i])
+        
+        print("------------------------------------------------------------------------------------")
+    
+    return x, y, r
+
+
+def calculaGradosPertenencias(puntosTotales, x, y, radios, n_clusters):
+    
+    gradosPertenenciaPorPuntosNORMALIZADOS = []    
+    puntosPorCluster = [] #Cada elemento de esta lista será una lista con varios puntos, los puntos del cluster 1 serán del index 0, etc.
+    gradosPorCluster = []
+    
+    for i in range(0, len(puntosTotales)): #Recorremos todos los puntos
+        
+        punto = puntosTotales.values[i] #Obtenemos el valor del punto en el índice 'i'
+        
+        varX = punto[0]
+        varY = punto[1]
+        
+        gradosPertenencia = [] #grados de pertenencia del punto en cuestion
+        gradosPertenenciaNormalizados = [] #grados de pertenencia NORMALIZADOS del punto en cuestion
+        
+        #Ahora hay que calcular la distancia del 'punto' a los centros de los cluster
+        
+        for j in range(2): #En vez de dos deberá ser el nº de clusters RECORRO EL NÚMERO DE CLUSTERS
+            
+                distanciaDePuntoACentro = math.sqrt(((x[j] - varX)*(x[j] - varX)) + ((y[j] - varY)*(y[j] - varY)))
+                
+                distanciaDePuntoACircunferencia =  abs(distanciaDePuntoACentro - radios[j])
+                
+                gradosPertenencia.append(distanciaDePuntoACircunferencia)
+                
+                        
+        #Normalizamos los valores
+        
+        denominador = sum(gradosPertenencia)
+        
+        for l in range(0, len(gradosPertenencia)):
+            
+            numerador = gradosPertenencia[l]/denominador
+
+            gradosPertenenciaNormalizados.append(numerador)           
+           
+        #El punto pertenece al círculo con grado de menor valor      
+        minpos = gradosPertenenciaNormalizados.index(min(gradosPertenenciaNormalizados))         
+    
+        gradosPertenenciaPorPuntosNORMALIZADOS.append(gradosPertenenciaNormalizados)
+        
+
+    for i in range(2): #Recorro cada cluster, y comparo cada grado de cada punto y lo añado o no si pertenece a ese cluster
+        
+        puntosPertenecientesAlCluster = []
+        gradosDeLosPuntosPertenecientesAlCluster = []
+        
+        for j in range(0, len(gradosPertenenciaPorPuntosNORMALIZADOS)):
+            
+            gradosDelPuntoJ = gradosPertenenciaPorPuntosNORMALIZADOS[j]
+           
+            if gradosDelPuntoJ.index(min(gradosDelPuntoJ)) == i:
+                puntosPertenecientesAlCluster.append(puntosTotales.values[j])
+                gradosDeLosPuntosPertenecientesAlCluster.append(min(gradosDelPuntoJ))
+
+        puntosPorCluster.append(puntosPertenecientesAlCluster) 
+        gradosPorCluster.append(gradosDeLosPuntosPertenecientesAlCluster)
+    
+    
+    return puntosPorCluster, gradosPorCluster
+    
+
+def inicializacion(n_clusters): #Inicializa los circulos según un número de cluster predeterminado
     
     with open('puntos.csv', newline='') as f:
     
@@ -116,76 +247,21 @@ def representacionGrafica(x, y, radios):  #Hay que dar los centros y los radios
 
 def buscandoAproximarLasCircunferencias(): #Calculo del grado de pertenencia inicial y muestra gráfica
     
-    x, y, radios = inicializacion()
+    x, y, radios = inicializacion(1)
 
     puntosCSV = pd.read_csv('puntos.csv', header=None, names=['X', 'Y'])
     
-    gradosPertenenciaPorPuntos = []
+    for i in range(20):
+        
+        print("LOOP")
+        
+        p1, p2 = calculaGradosPertenencias(puntosCSV, x, y, radios, 2)
     
-    for i in range(0, len(puntosCSV)):
-        
-        punto = puntosCSV.values[i] #Obtenemos el valor del punto en el índice 'i'
-        
-        varX = punto[0]
-        varY = punto[1]
-        
-        gradosPertenencia = [] #grados de pertenencia del punto en cuestion
-        gradosPertenenciaNormalizados = []
-        
-        #Ahora hay que calcular la distancia del 'punto' a los centros de los cluster
-        
-        for j in range(2): #En vez de dos deberá ser el nº de clusters
-            
-                centroCluster = []
-                centroCluster.append(x[j])
-                centroCluster.append(y[j])
-                
-                distanciaDePuntoACentro = math.sqrt(((x[j] - varX)*(x[j] - varX)) + ((y[j] - varY)*(y[j] - varY)))
-                
-                distanciaDePuntoACircunferencia =  abs(distanciaDePuntoACentro - radios[j])
-                
-                
-                gradosPertenencia.append(distanciaDePuntoACircunferencia)
-                
-                
-                print("Distancia del punto:",i + 1,"a la circunferencia:",j + 1, distanciaDePuntoACircunferencia)
-                
-                
-        print("Grados de Pertenencia del punto", punto, ":", gradosPertenencia)  
-        
-        #Normalizamos los valores
-        
-        denominador = sum(gradosPertenencia)
-        
-        for l in range(0, len(gradosPertenencia)):
-            
-            numerador = gradosPertenencia[l]/denominador
-
-            gradosPertenenciaNormalizados.append(numerador)
-            
-            
-        print("Grados de Pertenencia NORMALIZADOS del punto", punto, ":", gradosPertenenciaNormalizados)   
-              
-        #El punto pertenece al círculo con grado de menor valor      
-        minpos = gradosPertenenciaNormalizados.index(min(gradosPertenenciaNormalizados))    
-             
-        print("El punto:", punto, "pertenece a la circunferencia:", minpos + 1)
-         
-        print("------------------------------------------------------------------------------------")
+        x, y, radios = nuevasCircunferencias(puntosCSV, p1, p2, 2)
     
-        gradosPertenenciaPorPuntos.append(gradosPertenenciaNormalizados)
-        
-    print("TODOS LOS GRADOS DE PERTENENCIA NORMALIZADOS POR PUNTOS:", gradosPertenenciaPorPuntos)
-
-    representacionGrafica(x, y, radios)  
-    
-    print("SEGUNDA ITERACCIÓN")
+        representacionGrafica(x, y, radios)
     
     
-
-#AHORA HAY QUE REALIZAR N VECES UN ALGORITMO QUE APROXIME EL CENTRO A LOS PUNTOS
-
-
 if __name__ == "__main__":
 
     buscandoAproximarLasCircunferencias()

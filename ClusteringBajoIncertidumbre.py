@@ -387,62 +387,68 @@ def buscandoAproximarLasCircunferencias(n_cluster, url_datos): #Calculo del grad
     print('Tiempo en encontrar la solución:', round(((time2-time1)), 2), "segundos.")
     representacionGrafica(x, y, radios, puntosPorCluster)
     
-def generadorDeEjemplosEspecificos(n_clusters, centros, radios, n_min, n_max, ruido): #Genera ejemplo
+def generadorDeEjemplosEspecificos(nombre, n_clusters, centrosJuntos, radiosJuntos, n_min, n_max, ruido): #Genera ejemplo
     
+    #EN LA ENTRADA DE RADIOS Y CENTROS SOLO SE PERMITEN NUMEROS ENTEROS
+    #ES OBLIGATORIO SEGUIR EL PATRON: "(x,y), (x1,y1), (x2, y2)..." PARA LA ENTRADA DE CENTROS
     
+    centros = centrosJuntos.split(", ")
+    radios = radiosJuntos.split(", ")
     
-    x = []
-    y = []
-     
-    numPuntos = random.randint(10, 40)
-    
-    for i in range(0, numPuntos):
-        
-        angulo = random.randint(0, 360)
-        
-       # angulo = math.radians(angulo)
-        
-        varX = x0 + r0*math.cos(angulo)
-        varY = y0 + r0*math.sin(angulo)
-        
-        x.append(varX)
-        y.append(varY)
-        
-      
-     
-    #Primero ob   
-        
-    #Una iterraccion por cada cluster
-    
+    x = [] #Aqui almacenaré el valor de las X de los puntos
+    y = [] #Aqui almacenaré el valor de las Y de los puntos
+
     for i in range(0, int(n_clusters)):
         
         #Obtengo el centro y el radio del cluster i   
         centro = centros[i]
-        radio = radios[i]
+     
+        #Un poco basto pero no tengo mucho conocimiento sobre python
+        centro = centro.replace(',','')
+        centro = centro.replace(')','')
+        centro = centro.replace('(','')
         
-        
-        
+        r0 = radios[i]  
+        x0 = centro[0]
+        y0 = centro[1]
         
         numPuntosPorCluster = random.randint(int(n_min), int(n_max)) #Número de puntos por cluster
         
-        angulo = random.randint(0, 360) #Ángulo aleatorio
+        #Obteniendo los puntos
         
-        varX = x0 + r0*math.cos(angulo)
-        varY = y0 + r0*math.sin(angulo)
+        for i2 in range(0, numPuntosPorCluster):
+            
+            angulo = random.randint(0, 360) #Ángulo aleatorio
+            
+            varX = int(x0) + int(r0)*math.cos(angulo) #Valor de la X será el coseno del angulo por el radio
+            varY = int(y0) + int(r0)*math.sin(angulo) #Valor de la Y será el seno del angulo por el radio
         
+            x.append(round(varX, 1)) #Redondeo los valores con un decimal
+            y.append(round(varY, 1))
+                      
+        #Representación de ruido
         
+        if ruido == True:
         
+            puntosDeRuido = round((numPuntosPorCluster/5), 0) #Establezco el nº de ruido como la quinta parte de los puntos del cluster
         
+            print(puntosDeRuido)
         
+            for i3 in range (0, int(puntosDeRuido)):
+            
+                valorDeRuido = random.uniform(-1.5, 1.5)
+            
+                while abs(valorDeRuido) < 0.5:                        #Me aseguro que el valor de ruido será mayor de 0.5
+                    valorDeRuido = random.uniform(-1.5, 1.5)
+            
+                angulo = random.randint(0, 360) #Ángulo aleatorio
+            
+                varX = int(x0) + int(r0)*math.cos(angulo) + valorDeRuido #Valor de la X
+                varY = int(y0) + int(r0)*math.sin(angulo) + valorDeRuido #Valor de la Y
         
-        
-        
-        
-        
-        
-        
-        
-        
+                x.append(round(varX, 1)) #Redondeo los valores con un decimal
+                y.append(round(varY, 1))
+           
     #Representacion de los datos generados    
     
     fig = plt.figure(figsize = (6,6))
@@ -450,26 +456,38 @@ def generadorDeEjemplosEspecificos(n_clusters, centros, radios, n_min, n_max, ru
     ax = fig.add_subplot()
     ax.set_xlabel('X', fontsize = 15)
     ax.set_ylabel('Y', fontsize = 15)
-    ax.set_xlim(-2,2)
-    ax.set_ylim(-2,2)
-    ax.set_title('Círculos', fontsize = 20)
-    
-    colores = ["r", "b", "g", "y", "p"]  
-    
-    ax.scatter(x0, y0,c="black", s = 20)  
-        
-    for j in range(0, len(x)):
+    ax.set_xlim(-20,20)
+    ax.set_ylim(-20,20)
+    ax.set_title('Puntos', fontsize = 20)
+     
+    for i4 in range(0, len(x)):
        
-        ax.scatter(x[j], y = y[j], s = 20)
+        ax.scatter(x[i4], y = y[i4], c="black", s = 20)
              
     plt.grid()
-    plt.show()
-    #Obtenemos un angulo aleatorio
-    #La X será el coseno del angulo por el radio
-    #La Y será el seno del angulo por el radio
+    
+    nombreFinal = nombre + ".csv"
+    
+    try:
+        ejemplo = open(nombreFinal, "x") #Generamos el archivo en la raiz del proyecto  
+    except FileExistsError:
+        tkinter.messagebox.showerror("¡Error!", "¡Ya hay un archivo con ese nombre!") #Error si ya existe
+    else:
+        
+        #Escribimos los puntos en el archivo
+    
+        for i5 in range(0, len(x)):
+        
+            if i5 != 0:
+                ejemplo.write("\n")
+        
+            ejemplo.write(str(x[i5]))
+            ejemplo.write(", ")
+            ejemplo.write(str(y[i5]))
+        
+        ejemplo.close
 
-
-
+        plt.show()
 
 
 
@@ -488,19 +506,19 @@ def ventana_principal():
     label = tkinter.Label(ventanaPrincipal, image = photo_image, bg='#CFF9FF')
     
     
-    button = tkinter.Button(text="Aproximar Circunferencias",  command=aproximar)
-    button.config(bg="#8DE9F5", font=('MV Boli', '13'), height = 2, width = 25)
+    button = tkinter.Button(text="Aproximar Circunferencias",  command=ventana_aproximar)
+    button.config(bg="#8DE9F5", activebackground="#BCF7FF", font=('MV Boli', '13'), height = 2, width = 25)
     button.pack(side=tkinter.TOP, anchor=tkinter.NW, padx = 40, pady=20)
     
-    button2 = tkinter.Button(text="Generar Ejemplo",  command=aproximar)
-    button2.config(bg="#8DE9F5", font=('MV Boli', '13'), height = 2, width = 25)
+    button2 = tkinter.Button(text="Generar Ejemplo",  command=ventana_generador)
+    button2.config(bg="#8DE9F5", activebackground="#BCF7FF", font=('MV Boli', '13'), height = 2, width = 25)
     button2.pack(side=tkinter.TOP, anchor=tkinter.NW, padx=40)
     
     label.pack()
     
     ventanaPrincipal.mainloop()
     
-def aproximar():  
+def ventana_aproximar():  
     
     def abrirArchivo():
         fichero.config(state = 'normal', bg= "#B9F0A1")
@@ -532,10 +550,8 @@ def aproximar():
                 if tkinter.messagebox.askokcancel("¿Estás seguro?", mensaje): #Si aceptamos, finalmente ejecutamos la aproximación de circunferencias
                 
                     buscandoAproximarLasCircunferencias(int(numeroDeClusters.get()), str(fichero.get()))
-    
-                 
-              
-    ventanaAprox = tkinter.Toplevel()
+             
+    ventanaAprox = tkinter.Tk()
     ventanaAprox.title("Aproximar Circunferencias")    
     ventanaAprox.geometry("590x250")
     ventanaAprox.config(bg='#DEFFCF')
@@ -559,7 +575,6 @@ def aproximar():
     numeroDeClusters.bind("<Return>", aceptar)
     fichero.bind("<Return>", aceptar)
      
-    
     #Sube tu archivo
      
     tkinter.Label(ventanaAprox, padx =12, bg = "#DEFFCF",).grid(row=1, column = 2) #Espacio
@@ -567,7 +582,18 @@ def aproximar():
     botonSubeArchivo = tkinter.Button(ventanaAprox, text = "Buscar archivo", font=('MV Boli', '10'), bg="#98D37E", activebackground="#B9F0A1", command = abrirArchivo, padx = 10).grid(row = 1, column = 3) 
     botonAceptar = tkinter.Button(ventanaAprox, text = "Comenzar", font=('MV Boli', '10'), bg="#FFAC54", activebackground="#FFD1A0", command = lambda: aceptar("<Return>"), padx = 10).grid(row = 0, column = 3) 
     
+def ventana_generador():
     
+    ventanaGen = tkinter.Tk()
+    ventanaGen.title("Generador de Ejemplos")    
+    ventanaGen.geometry("450x450")
+    ventanaGen.config(bg='#FFD1A0')
+    
+    contenedor1 = tkinter.Label(ventanaGen, width = 64, height = 15, bg = "#FFD1A0").grid(row=0) #Para generar ejemplos aleatorios
+    contenedor2 = tkinter.Label(ventanaGen, width = 64, height = 15, bg = "#FFBE79").grid(row=1) #Para generar ejemplos con solución conocida
+    
+    
+      
     
     
     
@@ -575,6 +601,6 @@ def aproximar():
 if __name__ == "__main__":
     ventana_principal()
     #buscandoAproximarLasCircunferencias(3, 'C:/Users/Rafa/git/ClusteringBajoIncertidumbreIA/puntos3.csv')
-    #generadorDeEjemplos(1,2,5)
+    #generadorDeEjemplosEspecificos("ejemplo1",2,"(9,7), (2,6)","2, 4",5,20,False)
    
     

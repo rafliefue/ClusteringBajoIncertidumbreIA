@@ -6,6 +6,7 @@ import pandas as pd
 import math
 import csv
 import tkinter
+import time
 from heapq import nsmallest
 from PIL import Image, ImageTk
 
@@ -140,7 +141,6 @@ def nuevasCircunferencias(puntosTotales, puntosPorCluster, gradosPorCluster, n_c
     
     return x, y, r
 
-
 def calculaGradosPertenencias(puntosTotales, x, y, radios, n_clusters):
     
     gradosPertenenciaPorPuntosNORMALIZADOS = []    
@@ -264,10 +264,9 @@ def calculaGradosPertenencias(puntosTotales, x, y, radios, n_clusters):
     
     return puntosPorCluster, gradosPorCluster
     
-
-def inicializacion(n_clusters): #Inicializa los circulos según un número de cluster predeterminado
+def inicializacion(n_clusters, url_datos): #Inicializa los circulos según un número de cluster predeterminado
     
-    with open('puntos2.csv', newline='') as f:
+    with open(url_datos, newline='') as f:
     
         puntosCSV = csv.reader(f)
         puntos = list(puntosCSV)
@@ -301,7 +300,6 @@ def inicializacion(n_clusters): #Inicializa los circulos según un número de cl
     
     return x, y, radios
     
-     
 def representacionGrafica(x, y, radios, puntosPorCluster):  #Hay que dar los centros y los radios 
 
     fig = plt.figure(figsize = (6,6))
@@ -336,12 +334,13 @@ def representacionGrafica(x, y, radios, puntosPorCluster):  #Hay que dar los cen
     plt.grid()
     plt.show()
      
-
-def buscandoAproximarLasCircunferencias(n_cluster): #Calculo del grado de pertenencia inicial y muestra gráfica
+def buscandoAproximarLasCircunferencias(n_cluster, url_datos): #Calculo del grado de pertenencia inicial y muestra gráfica
     
-    x, y, radios = inicializacion(n_cluster)
+    time1 = time.time() #Iniciamos el tiempo de ejecución de la función
+    
+    x, y, radios = inicializacion(n_cluster, url_datos)
 
-    puntosCSV = pd.read_csv('puntos2.csv', header=None, names=['X', 'Y'])
+    puntosCSV = pd.read_csv(url_datos, header=None, names=['X', 'Y'])
     
     valorParada = 0.019
     
@@ -383,9 +382,11 @@ def buscandoAproximarLasCircunferencias(n_cluster): #Calculo del grado de perten
         #representacionGrafica(x, y, radios, puntosPorCluster)
     
     print("Solución encontrada en el ciclo:", counter - 1)
+    
+    time2 = time.time() #Paramos el tiempo de ejecución
+    print('Tiempo en encontrar la solución:', round(((time2-time1)), 2), "segundos.")
     representacionGrafica(x, y, radios, puntosPorCluster)
     
-
 def generadorDeEjemplos(x0,y0,r0): #Genera ejemplo
     
     x = []
@@ -430,6 +431,14 @@ def generadorDeEjemplos(x0,y0,r0): #Genera ejemplo
     #La X será el coseno del angulo por el radio
     #La Y será el seno del angulo por el radio
 
+
+
+
+
+
+#ESTILO Y REPRESENTACIÓN
+#=======================
+
 def ventana_principal():
     
     ventanaPrincipal = tkinter.Tk()
@@ -456,52 +465,77 @@ def ventana_principal():
     
 def aproximar():  
     
+    def abrirArchivo():
+        fichero.config(state = 'normal', bg= "#B9F0A1")
+        
+        if len(fichero.get()) != 0:  #Limpiamos el entry con los datos del archivo anterior si se decide cambiar de archivo antes de comenzar
+            fichero.delete(0, 'end')
+            
+        archivoDatos = tkinter.filedialog.askopenfilename(initialdir = "/", title = "Selecciona un archivo '.csv'", filetype = (("csv", "*.csv"), ("All Files", "*.*")))
+        fichero.insert(0, archivoDatos)
+        fichero.config(state = 'readonly')
+     
     def aceptar(event):
         
-        if len(numeroDeClusters.get()) == 0 or len(fichero.get()) == 0:
-            print("NADA")
-            T = tkinter.Text(ventanaAprox)
-            T.insert(tkinter.END, "Introduce el número de clusters y el archivo .csv con el conjunto de puntos.")
- 
-        #buscandoAproximarLasCircunferencias(int(entry.get()))
-        print("AAAAAAA", numeroDeClusters.get(), fichero.get())
-        
-       
+        isOk = True
+           
+        if len(numeroDeClusters.get()) == 0 or len(fichero.get()) == 0: #Comprobando si se han introducido los datos
             
+            tkinter.messagebox.showwarning("¡Cuidado!", "¡Has olvidado introducir el nº de clusters o el archivo de datos!")    
+            
+        else:
+            try:
+                int(numeroDeClusters.get()) #Comprobando si el numero de cluster introducido es un numero entero   
+            except ValueError:
+                tkinter.messagebox.showerror("¡Error!", "¡Has introducido un valor incorrecto como nº de clusters!")      
+            else:  
+                
+                mensaje = "El nº de clusters introducidos es: '" + numeroDeClusters.get() + "'" + "\nLa ruta selecionada es: '" + fichero.get() + "'" + "\n\nRecuerda que si selecciona un valor de clusters que no se adecúa a los datos el proceso podría eternizarse. \n \n ¿Estás seguro de que desea continuar?"
+                
+                if tkinter.messagebox.askokcancel("¿Estás seguro?", mensaje): #Si aceptamos, finalmente ejecutamos la aproximación de circunferencias
+                
+                    buscandoAproximarLasCircunferencias(int(numeroDeClusters.get()), str(fichero.get()))
+    
+                 
     ventanaAprox = tkinter.Toplevel()
-    ventanaAprox.geometry("450x450")
+    ventanaAprox.geometry("590x250")
     ventanaAprox.config(bg='#DEFFCF')
     
-    mensaje = tkinter.Text(ventanaAprox, background="white", font='16')
-    mensaje.insert(tkinter.INSERT, "Tip: Debe ser menos bobo")
-    mensaje.config(width = 50, height = 5, state='disabled')
-    #mensaje.grid(row=2)
+    mensaje = tkinter.Text(ventanaAprox, background="#B9F0A1", font=("Gabriola", 10,))
+    mensaje.insert(tkinter.INSERT, "RECUERDA: Para el número de circunferencias deberá \n introducir un número entero, mientras que para los \n datos de entrada deberá seleccionar un archivo: '.csv'.")
+    mensaje.config(width = 45, height = 3, state='disabled')
+    mensaje.grid(row=3, column = 0)
     
     tkinter.Label(ventanaAprox, text = "Número de circunferencias:", font = "Gabriola 16 bold", padx = 25, pady = 10, bg = "#DEFFCF").grid(row=0)
     tkinter.Label(ventanaAprox, text = "Datos de entrada:", font = "Gabriola 16 bold", padx = 20, pady = 10, bg = "#DEFFCF",).grid(row=1)
     
+    tkinter.Label(ventanaAprox, pady =12, bg = "#DEFFCF",).grid(row=2) #Espacio
+    
     numeroDeClusters = tkinter.Entry(ventanaAprox)
-    fichero = tkinter.Entry(ventanaAprox)
-    
-    numeroDeClusters.config(width = 26)
-    fichero.config(width = 26)
-    
+    fichero = tkinter.Entry(ventanaAprox) 
+    numeroDeClusters.config(width = 26, bg= "#B9F0A1")
+    fichero.config(width = 26, state ='readonly', readonlybackground = "#B9F0A1") 
     numeroDeClusters.grid(row=0, column=1)
-    fichero.grid(row=1, column=1)
-    
-    
-    
-    #numeroDeClusters.pack()
-    #fichero.pack()
-    
+    fichero.grid(row=1, column=1) 
     numeroDeClusters.bind("<Return>", aceptar)
     fichero.bind("<Return>", aceptar)
-    
-   
      
+    
+    #Sube tu archivo
+     
+    tkinter.Label(ventanaAprox, padx =12, bg = "#DEFFCF",).grid(row=1, column = 2) #Espacio
+    
+    botonSubeArchivo = tkinter.Button(ventanaAprox, text = "Buscar archivo", font=('MV Boli', '10'), bg="#98D37E", activebackground="#B9F0A1", command = abrirArchivo, padx = 10).grid(row = 1, column = 3) 
+    botonAceptar = tkinter.Button(ventanaAprox, text = "Comenzar", font=('MV Boli', '10'), bg="#FFAC54", activebackground="#FFD1A0", command = lambda: aceptar("<Return>"), padx = 10).grid(row = 0, column = 3) 
+    
+    
+    
+    
+    
+       
 if __name__ == "__main__":
-    ventana_principal()
-    #buscandoAproximarLasCircunferencias(3)
+    #ventana_principal()
+    buscandoAproximarLasCircunferencias(3, 'C:/Users/Rafa/git/ClusteringBajoIncertidumbreIA/puntos3.csv')
     #generadorDeEjemplos(1,2,5)
    
     

@@ -387,7 +387,9 @@ def buscandoAproximarLasCircunferencias(n_cluster, url_datos): #Calculo del grad
     print('Tiempo en encontrar la solución:', round(((time2-time1)), 2), "segundos.")
     representacionGrafica(x, y, radios, puntosPorCluster)
     
-def generadorDeEjemplos(x0,y0,r0): #Genera ejemplo
+def generadorDeEjemplosEspecificos(n_clusters, centros, radios, n_min, n_max, ruido): #Genera ejemplo
+    
+    
     
     x = []
     y = []
@@ -405,6 +407,41 @@ def generadorDeEjemplos(x0,y0,r0): #Genera ejemplo
         
         x.append(varX)
         y.append(varY)
+        
+     
+     
+    #Primero ob   
+        
+    #Una iterraccion por cada cluster
+    
+    for i in range(0, int(n_clusters)):
+        
+        #Obtengo el centro y el radio del cluster i   
+        centro = centros[i]
+        radio = radios[i]
+        
+        
+        
+        
+        numPuntosPorCluster = random.randint(int(n_min), int(n_max)) #Número de puntos por cluster
+        
+        angulo = random.randint(0, 360) #Ángulo aleatorio
+        
+        varX = x0 + r0*math.cos(angulo)
+        varY = y0 + r0*math.sin(angulo)
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
     #Representacion de los datos generados    
     

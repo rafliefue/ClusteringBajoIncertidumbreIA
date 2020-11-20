@@ -408,7 +408,7 @@ def generadorDeEjemplosEspecificos(n_clusters, centros, radios, n_min, n_max, ru
         x.append(varX)
         y.append(varY)
         
-     
+      
      
     #Primero ob   
         

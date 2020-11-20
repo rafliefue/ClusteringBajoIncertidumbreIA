@@ -1,10 +1,13 @@
 #encoding:utf-8
+
 import random
 import matplotlib.pyplot as plt
 import pandas as pd
 import math
 import csv
 import tkinter
+from heapq import nsmallest
+from PIL import Image, ImageTk
 
 def findCircle(x1, y1, x2, y2, x3, y3): #FUNCION OBTENIDA DE https://www.geeksforgeeks.org/equation-of-circle-when-three-points-on-the-circle-are-given/
     x12 = x1 - x2;  
@@ -55,6 +58,22 @@ def findCircle(x1, y1, x2, y2, x3, y3): #FUNCION OBTENIDA DE https://www.geeksfo
 
     return h, k, r
 
+def redondearCircunferencias(x, y, radios):
+    
+    xRed = []
+    yRed = []
+    radiosRed = []
+    
+    for i in range (0, len(radios)):
+        newX = round(x[i], 1)
+        newY = round(y[i], 1)
+        newRadio = round(radios[i], 1)
+        
+        xRed.append(newX)
+        yRed.append(newY)
+        radiosRed.append(newRadio)
+    
+    return xRed, yRed, radiosRed 
 
 def nuevasCircunferencias(puntosTotales, puntosPorCluster, gradosPorCluster, n_clusters): #Le daré el conjunto de puntos que pertenecen a esa circunferencia, tras ello usaré los 3 puntos con mejor grado de pertenencia para calcular el nuevo radio, y el centro será la media de todos los puntos
     #Este algoritmo estará basado en findCircle, k-medias, y mi propia lógica
@@ -111,8 +130,8 @@ def nuevasCircunferencias(puntosTotales, puntosPorCluster, gradosPorCluster, n_c
             
             distanciaDePuntoACentro = math.sqrt(((x[i] - varX)*(x[i] - varX)) + ((y[i] - varY)*(y[i] - varY))) + distanciaDePuntoACentro
                        
-        nuevoRadio = distanciaDePuntoACentro/len(tresPuntos)        
-                  
+        nuevoRadio = distanciaDePuntoACentro/len(tresPuntos)    
+              
         r.append(nuevoRadio)
         
         print("El nuevo radio de la circunferencia", i+1, "es:", r[i])
@@ -164,6 +183,7 @@ def calculaGradosPertenencias(puntosTotales, x, y, radios, n_clusters):
     
         gradosPertenenciaPorPuntosNORMALIZADOS.append(gradosPertenenciaNormalizados)
         
+    print("dsfsdfsdfs",gradosPertenenciaPorPuntosNORMALIZADOS)
 
     for i in range(n_clusters): #Recorro cada cluster, y comparo cada grado de cada punto y lo añado o no si pertenece a ese cluster
         
@@ -177,7 +197,63 @@ def calculaGradosPertenencias(puntosTotales, x, y, radios, n_clusters):
             if gradosDelPuntoJ.index(min(gradosDelPuntoJ)) == i:
                 puntosPertenecientesAlCluster.append(puntosTotales.values[j])
                 gradosDeLosPuntosPertenecientesAlCluster.append(min(gradosDelPuntoJ))
-
+                
+                
+        if len(puntosPertenecientesAlCluster) < 3: #Si algun cluster se queda sin puntos, le asigno sus 3 mejores puntos AHORA OBLIGO A QUE TENGA 3 CIRCULOS JEJ
+            
+            gradosDelClusterN = []   
+            
+            for u in range(0, len(gradosPertenenciaPorPuntosNORMALIZADOS)):
+                
+                tuplaDeGrados = gradosPertenenciaPorPuntosNORMALIZADOS[u]
+                
+                gradosDelClusterN.append(tuplaDeGrados[i])
+                  
+            
+            print("ESTOY SIN PUNTOS JKEJE", gradosDelClusterN)
+            
+            tresMejoresDeN = nsmallest(2, gradosDelClusterN)
+            peor = max(gradosDelClusterN)
+            
+            gradosDeLosPuntosPertenecientesAlCluster.append(tresMejoresDeN[0])
+            gradosDeLosPuntosPertenecientesAlCluster.append(tresMejoresDeN[1])
+            gradosDeLosPuntosPertenecientesAlCluster.append(peor)
+            
+            print("MIS TRES MEJORES JEJ", tresMejoresDeN)
+            
+            indPuntos = []
+            
+            for o in range(0, 2):
+                
+                for v in range(0, len(gradosPertenenciaPorPuntosNORMALIZADOS)):
+                
+                    gradosDelPuntoV = gradosPertenenciaPorPuntosNORMALIZADOS[v]
+                
+                    if tresMejoresDeN[o] in  gradosDelPuntoV:
+                        
+                        indPuntos.append(v)
+                        
+                    
+            
+            print("Indice de los puntos", indPuntos)
+            
+            for h in range(0, 2):
+                
+                index = indPuntos[h] 
+            
+                puntosPertenecientesAlCluster.append(puntosTotales.values[index])
+            
+            
+            #Como tercero cojo el que peor 
+            
+            for v in range(0, len(gradosPertenenciaPorPuntosNORMALIZADOS)):
+                
+                gradosDelPuntoV = gradosPertenenciaPorPuntosNORMALIZADOS[v]
+            
+                if peor in gradosDelPuntoV:
+                    
+                    puntosPertenecientesAlCluster.append(puntosTotales.values[v])
+            
         puntosPorCluster.append(puntosPertenecientesAlCluster) 
         gradosPorCluster.append(gradosDeLosPuntosPertenecientesAlCluster)
     
@@ -191,12 +267,11 @@ def calculaGradosPertenencias(puntosTotales, x, y, radios, n_clusters):
 
 def inicializacion(n_clusters): #Inicializa los circulos según un número de cluster predeterminado
     
-    with open('puntos.csv', newline='') as f:
+    with open('puntos2.csv', newline='') as f:
     
         puntosCSV = csv.reader(f)
         puntos = list(puntosCSV)
         
-    
     x = []
     y = []
     radios = []    
@@ -227,31 +302,37 @@ def inicializacion(n_clusters): #Inicializa los circulos según un número de cl
     return x, y, radios
     
      
-def representacionGrafica(x, y, radios, n_cluster):  #Hay que dar los centros y los radios 
+def representacionGrafica(x, y, radios, puntosPorCluster):  #Hay que dar los centros y los radios 
 
-    puntosCSV = pd.read_csv('puntos.csv', header=None, names=['X', 'Y'])
-    
     fig = plt.figure(figsize = (6,6))
 
     ax = fig.add_subplot()
     ax.set_xlabel('X', fontsize = 15)
     ax.set_ylabel('Y', fontsize = 15)
-    ax.set_xlim(-5,15)
-    ax.set_ylim(-5,15)
+    ax.set_xlim(-5,27)
+    ax.set_ylim(-5,27)
     ax.set_title('Círculos', fontsize = 20)
     
+    colores = ["r", "b", "g", "y", "p"]
     
-    for i in range(0, n_cluster):
+    for i in range(0, len(radios)):
         
         varX = x[i]
         varY = y[i]
         
-        circle1 = plt.Circle((varX,varY), radios[i], color='r', fill= False)
-        ax.scatter(x = varX, y = varY, s = 5)
-        ax.scatter(puntosCSV.X, y = puntosCSV.Y,c='b', s = 20)
+        puntosDelCluster = puntosPorCluster[i]
+        color = colores[i]
         
+        #Dibujando la circunferencia
+        ax.scatter(x = varX, y = varY, c=color, s = 15)
+        circle1 = plt.Circle((varX,varY), radios[i], color= color, fill= False)
         ax.add_artist(circle1)
-    
+        
+        #Dibujando los puntos del cluster pertenecientes a esa circunferencia
+        for j in range(0, len(puntosDelCluster)):
+            punto = puntosDelCluster[j]
+            ax.scatter(punto[0], y = punto[1],c=color, s = 5)
+             
     plt.grid()
     plt.show()
      
@@ -260,18 +341,21 @@ def buscandoAproximarLasCircunferencias(n_cluster): #Calculo del grado de perten
     
     x, y, radios = inicializacion(n_cluster)
 
-    puntosCSV = pd.read_csv('puntos.csv', header=None, names=['X', 'Y'])
+    puntosCSV = pd.read_csv('puntos2.csv', header=None, names=['X', 'Y'])
     
-    valorParada = 0.05
+    valorParada = 0.019
     
-    sumGradosTotal = 10
+    sumGradosTotal = 10 #F1
     
     counter = 1
+    
     
     while sumGradosTotal > valorParada:
         
         print("Ciclo", counter)
         print("========")
+        
+        condicion = True
         
         counter = counter + 1
         
@@ -280,11 +364,11 @@ def buscandoAproximarLasCircunferencias(n_cluster): #Calculo del grado de perten
         #CONDICIÓN DE PARADA
         for i in range(n_cluster):
             
-            mediaGradosCluster = sum(gradosPorCluster[i])/len(gradosPorCluster[i])
+            mediaGradosCluster = sum(gradosPorCluster[i])/(len(gradosPorCluster[i])) #F1
             
-            sumGradosTotal =  sumGradosTotal + mediaGradosCluster
-            
-        sumGradosTotal = sumGradosTotal/len(gradosPorCluster) #Esta es la media de grados juntando todos los cluster
+            sumGradosTotal =  sumGradosTotal + mediaGradosCluster #F1
+          
+        sumGradosTotal = sumGradosTotal/len(gradosPorCluster) #Esta es la media de grados juntando todos los cluster #F1
         
         if(n_cluster) == 1:
             
@@ -295,23 +379,129 @@ def buscandoAproximarLasCircunferencias(n_cluster): #Calculo del grado de perten
         print("------------------------------------------------------------------------------------")
         
         x, y, radios = nuevasCircunferencias(puntosCSV, puntosPorCluster, gradosPorCluster, n_cluster)
-        
-        
+       
+        #representacionGrafica(x, y, radios, puntosPorCluster)
     
     print("Solución encontrada en el ciclo:", counter - 1)
-    representacionGrafica(x, y, radios, n_cluster)
+    representacionGrafica(x, y, radios, puntosPorCluster)
+    
 
+def generadorDeEjemplos(x0,y0,r0): #Genera ejemplo
+    
+    x = []
+    y = []
+     
+    numPuntos = random.randint(10, 40)
+    
+    for i in range(0, numPuntos):
+        
+        angulo = random.randint(0, 360)
+        
+       # angulo = math.radians(angulo)
+        
+        varX = x0 + r0*math.cos(angulo)
+        varY = y0 + r0*math.sin(angulo)
+        
+        x.append(varX)
+        y.append(varY)
+        
+    #Representacion de los datos generados    
+    
+    fig = plt.figure(figsize = (6,6))
+
+    ax = fig.add_subplot()
+    ax.set_xlabel('X', fontsize = 15)
+    ax.set_ylabel('Y', fontsize = 15)
+    ax.set_xlim(-2,2)
+    ax.set_ylim(-2,2)
+    ax.set_title('Círculos', fontsize = 20)
+    
+    colores = ["r", "b", "g", "y", "p"]  
+    
+    ax.scatter(x0, y0,c="black", s = 20)  
+        
+    for j in range(0, len(x)):
+       
+        ax.scatter(x[j], y = y[j], s = 20)
+             
+    plt.grid()
+    plt.show()
+    #Obtenemos un angulo aleatorio
+    #La X será el coseno del angulo por el radio
+    #La Y será el seno del angulo por el radio
 
 def ventana_principal():
     
-    top = tkinter.Tk()
-    top.title("Clustering Bajo Incertidumbre") 
+    ventanaPrincipal = tkinter.Tk()
+    ventanaPrincipal.geometry("450x450")
+    ventanaPrincipal.config(bg='#CFF9FF')
+    ventanaPrincipal.title("Clustering Bajo Incertidumbre") 
     
-    button = tkinter.Button(text="Aproximar circunferencias", command= lambda: buscandoAproximarLasCircunferencias(2))
-    button.pack()
+    image = Image.open('fondo.png')
+    photo_image = ImageTk.PhotoImage(image)
+    label = tkinter.Label(ventanaPrincipal, image = photo_image, bg='#CFF9FF')
     
-    top.mainloop()
+    
+    button = tkinter.Button(text="Aproximar circunferencias",  command=aproximar)
+    button.config(bg="#8DE9F5", font=('MV Boli', '13'), height = 2, width = 25)
+    button.pack(side=tkinter.TOP, anchor=tkinter.NW, padx = 40, pady=20)
+    
+    button2 = tkinter.Button(text="Generar Ejemplo",  command=aproximar)
+    button2.config(bg="#8DE9F5", font=('MV Boli', '13'), height = 2, width = 25)
+    button2.pack(side=tkinter.TOP, anchor=tkinter.NW, padx=40)
+    
+    label.pack()
+    
+    ventanaPrincipal.mainloop()
+    
+def aproximar():  
+    
+    def aceptar(event):
+        
+        if len(numeroDeClusters.get()) == 0 or len(fichero.get()) == 0:
+            print("NADA")
+            T = tkinter.Text(ventanaAprox)
+            T.insert(tkinter.END, "Introduce el número de clusters y el archivo .csv con el conjunto de puntos.")
+ 
+        #buscandoAproximarLasCircunferencias(int(entry.get()))
+        print("AAAAAAA", numeroDeClusters.get(), fichero.get())
+        
+       
+            
+    ventanaAprox = tkinter.Toplevel()
+    ventanaAprox.geometry("450x450")
+    ventanaAprox.config(bg='#DEFFCF')
+    
+    mensaje = tkinter.Text(ventanaAprox, background="white", font='16')
+    mensaje.insert(tkinter.INSERT, "Tip: Debe ser menos bobo")
+    mensaje.config(width = 50, height = 5, state='disabled')
+    #mensaje.grid(row=2)
+    
+    tkinter.Label(ventanaAprox, text = "Número de circunferencias:", font = "Gabriola 16 bold", padx = 25, pady = 10, bg = "#DEFFCF").grid(row=0)
+    tkinter.Label(ventanaAprox, text = "Datos de entrada:", font = "Gabriola 16 bold", padx = 20, pady = 10, bg = "#DEFFCF",).grid(row=1)
+    
+    numeroDeClusters = tkinter.Entry(ventanaAprox)
+    fichero = tkinter.Entry(ventanaAprox)
+    
+    numeroDeClusters.config(width = 26)
+    fichero.config(width = 26)
+    
+    numeroDeClusters.grid(row=0, column=1)
+    fichero.grid(row=1, column=1)
+    
+    
+    
+    #numeroDeClusters.pack()
+    #fichero.pack()
+    
+    numeroDeClusters.bind("<Return>", aceptar)
+    fichero.bind("<Return>", aceptar)
+    
+   
      
 if __name__ == "__main__":
     ventana_principal()
+    #buscandoAproximarLasCircunferencias(3)
+    #generadorDeEjemplos(1,2,5)
+   
     

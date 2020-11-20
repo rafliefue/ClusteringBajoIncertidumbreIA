@@ -451,7 +451,7 @@ def ventana_principal():
     label = tkinter.Label(ventanaPrincipal, image = photo_image, bg='#CFF9FF')
     
     
-    button = tkinter.Button(text="Aproximar circunferencias",  command=aproximar)
+    button = tkinter.Button(text="Aproximar Circunferencias",  command=aproximar)
     button.config(bg="#8DE9F5", font=('MV Boli', '13'), height = 2, width = 25)
     button.pack(side=tkinter.TOP, anchor=tkinter.NW, padx = 40, pady=20)
     
@@ -497,7 +497,9 @@ def aproximar():
                     buscandoAproximarLasCircunferencias(int(numeroDeClusters.get()), str(fichero.get()))
     
                  
+              
     ventanaAprox = tkinter.Toplevel()
+    ventanaAprox.title("Aproximar Circunferencias")    
     ventanaAprox.geometry("590x250")
     ventanaAprox.config(bg='#DEFFCF')
     
@@ -534,8 +536,8 @@ def aproximar():
     
        
 if __name__ == "__main__":
-    #ventana_principal()
-    buscandoAproximarLasCircunferencias(3, 'C:/Users/Rafa/git/ClusteringBajoIncertidumbreIA/puntos3.csv')
+    ventana_principal()
+    #buscandoAproximarLasCircunferencias(3, 'C:/Users/Rafa/git/ClusteringBajoIncertidumbreIA/puntos3.csv')
     #generadorDeEjemplos(1,2,5)
    
     

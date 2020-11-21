@@ -112,7 +112,7 @@ def nuevasCircunferencias(puntosTotales, puntosPorCluster, gradosPorCluster, n_c
         print("El nuevo centro de la circunferencia", i+1, "es: (", x[i], ",", y[i], ")")
         
         #BUSCANDO EL NUEVO RADIO   
-
+            #PROBAR CON TODOS LOS PUNTOS DEL CLUSTER, EN VEZ DE 3 Aleatorios
         p = 3
         
         if len(puntos) < 3:
@@ -436,10 +436,10 @@ def generadorDeEjemplosEspecificos(nombre, n_clusters, centrosJuntos, radiosJunt
         
             for i3 in range (0, int(puntosDeRuido)):
             
-                valorDeRuido = random.uniform(-1.5, 1.5)
+                valorDeRuido = random.uniform(-2.5, 2.5)
             
                 while abs(valorDeRuido) < 0.5:                        #Me aseguro que el valor de ruido será mayor de 0.5
-                    valorDeRuido = random.uniform(-1.5, 1.5)
+                    valorDeRuido = random.uniform(-2.5, 2.5)
             
                 angulo = random.randint(0, 360) #Ángulo aleatorio
             
@@ -505,7 +505,6 @@ def ventana_principal():
     photo_image = ImageTk.PhotoImage(image)
     label = tkinter.Label(ventanaPrincipal, image = photo_image, bg='#CFF9FF')
     
-    
     button = tkinter.Button(text="Aproximar Circunferencias",  command=ventana_aproximar)
     button.config(bg="#8DE9F5", activebackground="#BCF7FF", font=('MV Boli', '13'), height = 2, width = 25)
     button.pack(side=tkinter.TOP, anchor=tkinter.NW, padx = 40, pady=20)
@@ -531,8 +530,6 @@ def ventana_aproximar():
         fichero.config(state = 'readonly')
      
     def aceptar(event):
-        
-        isOk = True
            
         if len(numeroDeClusters.get()) == 0 or len(fichero.get()) == 0: #Comprobando si se han introducido los datos
             
@@ -568,10 +565,13 @@ def ventana_aproximar():
     
     numeroDeClusters = tkinter.Entry(ventanaAprox)
     fichero = tkinter.Entry(ventanaAprox) 
+    
     numeroDeClusters.config(width = 26, bg= "#B9F0A1")
     fichero.config(width = 26, state ='readonly', readonlybackground = "#B9F0A1") 
+    
     numeroDeClusters.grid(row=0, column=1)
     fichero.grid(row=1, column=1) 
+    
     numeroDeClusters.bind("<Return>", aceptar)
     fichero.bind("<Return>", aceptar)
      
@@ -584,23 +584,114 @@ def ventana_aproximar():
     
 def ventana_generador():
     
+    def generar(event):
+        
+        cenBool = False
+        radBool = False
+        ruido = False   
+        
+        #Check valores necesarios
+        
+        if len(numeroDeClusters.get()) == 0 or len(numeroMinPuntos.get()) == 0 or len(numeroMaxPuntos.get()) == 0 or len(nombre.get()) == 0: #Comprobando si se han introducido los datos         
+            return tkinter.messagebox.showwarning("¡Cuidado!", "¡Has olvidado introducir el nombre, el nº de clusters o el rango de puntos!")
+             
+        #Check nombre max 60 caracteres
+        if len(nombre.get()) > 60:         
+            return tkinter.messagebox.showwarning("¡Cuidado!", "¡El nombre no puede superar 60 caracteres!")
+            
+        #Check valores integer
+        try:
+            int(numeroDeClusters.get())
+            int(numeroMinPuntos.get())
+            int(numeroMaxPuntos.get())  
+        except ValueError:
+            tkinter.messagebox.showerror("¡Error!", "¡Has introducido un valor incorrecto en el nº de circunferencias, mínimo de puntos o máximo de puntos, recuerda que deben ser números enteros!")
+        
+        #Check min < max   
+        if int(numeroMinPuntos.get()) > int(numeroMaxPuntos.get()):
+            return tkinter.messagebox.showwarning("¡Cuidado!", "¡El mínimo de puntos no puede superar al máximo de puntos!")
+        
+        #Check min distinto de 0
+        if int(numeroMinPuntos.get()) == 0:
+            return tkinter.messagebox.showwarning("¡Cuidado!", "¡El mínimo de puntos no puede ser igual a 0!")
+            
+               
+        if len(str(radios.get())) != 0:
+            radBool = True 
+            
+        if len(str(centros.get())) != 0:
+            cenBool = True  
+            
+        #Check radio+centros
+        if (radBool == False and cenBool == True) or (radBool == True and cenBool == False) :
+            return tkinter.messagebox.showwarning("¡Cuidado!", "¡Si introduces centros debes introducir radios y viceversa!")
+        
+        #if radios And centros --> Check datos en int DE LOCOS
+         
+        #if radios And centros --> Check radioSize = centroSize = nClusters MAL
+        if len(str(centros.get())) !=  len(str(radios.get())):
+            return tkinter.messagebox.showerror("¡Error!", "¡El número de radios debe ser igual al número de centros y al número de circunferencias!")
+            
+        #if radios And centros --> Check patron radios and centros  LEL
+          
+        if checky:
+            ruido = True
+        
+        generadorDeEjemplosEspecificos(str(nombre.get()), int(numeroDeClusters.get()), str(centros.get()), str(radios.get()), int(numeroMinPuntos.get()), int(numeroMaxPuntos.get()), ruido)
+    
     ventanaGen = tkinter.Tk()
     ventanaGen.title("Generador de Ejemplos")    
-    ventanaGen.geometry("450x450")
+    ventanaGen.geometry("612x450")
     ventanaGen.config(bg='#FFD1A0')
+     
+    #Títulos
+       
+    tkinter.Label(ventanaGen, text = "Nombre:", anchor= "e", font = "Gabriola 16 bold", bg='#FFD1A0', width = 30).grid(row=1)
+    tkinter.Label(ventanaGen, text = "Número de circunferencias:", anchor= "e", font = "Gabriola 16 bold", bg='#FFD1A0', width = 30).grid(row=2)
+    tkinter.Label(ventanaGen, text = "Número mínimo de puntos por cluster:", anchor= "e", font = "Gabriola 16 bold", bg='#FFD1A0', width = 30).grid(row=3)
+    tkinter.Label(ventanaGen, text = "Número máximo de puntos por cluster:", anchor= "e", font = "Gabriola 16 bold", bg='#FFD1A0', width = 30).grid(row=4) 
+    checky = tkinter.Checkbutton(ventanaGen, text = "Aplicar ruido", font = "Gabriola 16 bold", bg='#FFD1A0', activebackground="#FFD1A0", selectcolor = "#FFB96F").grid(row=5, column = 2)  
+    tkinter.Label(ventanaGen, text = "Centros (Opcional):", anchor= "e", font = "Gabriola 16 bold", bg='#FFD1A0', width = 30).grid(row=7)
+    tkinter.Label(ventanaGen, text = "Radios (Opcional):", anchor= "e", font = "Gabriola 16 bold", bg='#FFD1A0', width = 30).grid(row=8)
     
-    contenedor1 = tkinter.Label(ventanaGen, width = 64, height = 15, bg = "#FFD1A0").grid(row=0) #Para generar ejemplos aleatorios
-    contenedor2 = tkinter.Label(ventanaGen, width = 64, height = 15, bg = "#FFBE79").grid(row=1) #Para generar ejemplos con solución conocida
+    tkinter.Label(ventanaGen, text = "ej: '(x1,y1), (x2,y2)...'", font = "Arial 10", bg = "#FFD1A0", fg = "grey").grid(row=7, column = 4)
+    tkinter.Label(ventanaGen, text = "ej: 'r1, r2, r3, r4, r5...'", font = "Arial 10", bg = "#FFD1A0", fg = "grey").grid(row=8, column = 4)
     
+    #Entradas
     
-      
+    nombre = tkinter.Entry(ventanaGen, bg= "#FFB96F") 
+    numeroDeClusters = tkinter.Entry(ventanaGen, bg= "#FFB96F") 
+    numeroMinPuntos = tkinter.Entry(ventanaGen, bg= "#FFB96F") 
+    numeroMaxPuntos = tkinter.Entry(ventanaGen, bg= "#FFB96F")  
+    centros = tkinter.Entry(ventanaGen, bg= "#FFB96F")  
+    radios = tkinter.Entry(ventanaGen, bg= "#FFB96F")
     
+    nombre.grid(row = 1, column = 2)
+    numeroDeClusters.grid(row = 2, column = 2)  
+    numeroMinPuntos.grid(row = 3, column = 2)  
+    numeroMaxPuntos.grid(row = 4, column = 2)  
+    centros.grid(row = 7, column =2)  
+    radios.grid(row = 8, column =2) 
     
+    nombre.bind("<Return>", generar)
+    numeroDeClusters.bind("<Return>", generar)
+    numeroMinPuntos.bind("<Return>", generar)
+    numeroMaxPuntos.bind("<Return>", generar)
+    centros.bind("<Return>", generar)
+    radios.bind("<Return>", generar)  
     
+    #Generar
+    
+    botonAceptar = tkinter.Button(ventanaGen, text = "Generar", font=('MV Boli', '10'), bg="#98D37E", activebackground="#B9F0A1", command = lambda: generar("<Return>"), padx = 10).grid(row = 10, column = 2) 
+    
+    #Espacios en blanco
+    
+    tkinter.Label(ventanaGen, bg = "#FFD1A0").grid(row=9)
+    tkinter.Label(ventanaGen, bg = "#FFD1A0", width = 5).grid(column=1)
+    tkinter.Label(ventanaGen, bg = "#FFD1A0").grid(row=6)
+    tkinter.Label(ventanaGen, bg = "#FFD1A0").grid(row=0)
        
 if __name__ == "__main__":
     ventana_principal()
-    #buscandoAproximarLasCircunferencias(3, 'C:/Users/Rafa/git/ClusteringBajoIncertidumbreIA/puntos3.csv')
-    #generadorDeEjemplosEspecificos("ejemplo1",2,"(9,7), (2,6)","2, 4",5,20,False)
    
     

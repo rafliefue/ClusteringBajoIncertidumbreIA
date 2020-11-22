@@ -137,6 +137,7 @@ def nuevasCircunferencias(puntosTotales, puntosPorCluster, gradosPorCluster, n_c
     return x, y, r
 
 def nuevasCircunferenciasV2(puntosPorCluster):
+    
     #Algoritmo basado en uno de internete jejej https://goodcalculators.com/best-fit-circle-least-squares-calculator/
     
     x = [] #Valores de las X de los centros
@@ -193,8 +194,7 @@ def nuevasCircunferenciasV2(puntosPorCluster):
         #A = float(ABC[0])
         #B = float(ABC[1])
         #C = float(ABC[2])
-        
-        
+            
         sumX = 0 
         sumY = 0
         
@@ -223,14 +223,10 @@ def nuevasCircunferenciasV2(puntosPorCluster):
         
         #r = (raiz(4*C + A^2 + B^2))/2
         
-        
-        
         nuevoRadio = math.sqrt( (4*C + pow(A, 2) + pow(B, 2) ) )/2
         
         r.append(nuevoRadio)
-        
-        
-        
+             
     return x, y, r
     
 def nuevasCircunferenciasV3(puntosPorCluster):
@@ -340,92 +336,102 @@ def nuevasCircunferenciasV3(puntosPorCluster):
            
     return x, y, r
 
-def nuevasCircunferenciasV4(puntosTotales, puntosPorCluster, gradosPorCluster, n_clusters): #Le daré el conjunto de puntos que pertenecen a esa circunferencia, tras ello usaré los 3 puntos con mejor grado de pertenencia para calcular el nuevo radio, y el centro será la media de todos los puntos
+def nuevasCircunferenciasV4(puntosPorCluster, cambio, x, y, r): #Le daré el conjunto de puntos que pertenecen a esa circunferencia, tras ello usaré los 3 puntos con mejor grado de pertenencia para calcular el nuevo radio, y el centro será la media de todos los puntos
     #Este algoritmo estará basado en findCircle, k-medias, y mi propia lógica
     
     #Por cada Circunferencia, voy a calcular su nuevo radio y centro
     
-    x = [] #Lista con las variables X de cada centro
-    y = [] #Lista con las variables Y de cada centro
-    r = [] #Lista con los radios de cada centro
+    xf = [] #Lista con las variables X de cada centro
+    yf = [] #Lista con las variables Y de cada centro
+    rf = [] #Lista con los radios de cada centro
     
-    for i in range(n_clusters): #Recorro cada cluster
+    for i in range(len(puntosPorCluster)): #Recorro cada cluster
         
-        puntos = puntosPorCluster[i] #Obtengo los puntos de ese cluster
-        grados = gradosPorCluster[i] #Obtengo los grados de ese cluster
+        if cambio[i] == True:
         
-        #BUSCANDO EL NUEVO CENTRO
+            puntos = puntosPorCluster[i] #Obtengo los puntos de ese cluster
         
-        punto1, punto3 = random.sample(puntos, 2) #Cojo dos puntos aleatorios
+            #BUSCANDO EL NUEVO CENTRO
         
-        x1 = punto1[0]
-        y1 = punto1[1]
-
-        distanciasP1 = []
+            punto1, punto3 = random.sample(puntos, 2) #Cojo dos puntos aleatorios
         
-        for j in range(0, len(puntos)):
-               
-            punto = puntos[j]
+            x1 = punto1[0]
+            y1 = punto1[1]
+    
+            distanciasP1 = []
             
-            varX = punto[0]
-            varY = punto[1]
+            for j in range(0, len(puntos)):
+                   
+                punto = puntos[j]
+                
+                varX = punto[0]
+                varY = punto[1]
+                
+                distanciaDePuntoAP1 = math.sqrt(((x1 - varX)*(x1 - varX)) + ((y1 - varY)*(y1 - varY)))
             
-            distanciaDePuntoAP1 = math.sqrt(((x1 - varX)*(x1 - varX)) + ((y1 - varY)*(y1 - varY)))
-        
-            distanciasP1.append(distanciaDePuntoAP1)
-              
-        #Busco los mas alejados
-        
-        indexP2 = distanciasP1.index(max(distanciasP1)) #Punto más alejado
-         
-        punto2 = puntos[indexP2]
+                distanciasP1.append(distanciaDePuntoAP1)
+                  
+            #Busco los mas alejados
+            
+            indexP2 = distanciasP1.index(max(distanciasP1)) #Punto más alejado
+             
+            punto2 = puntos[indexP2]
+          
+            x2 = punto2[0]
+            y2 = punto2[1]
+            
+            newX = (x1+x2)/2
+            newY = (y1+y2)/2
+            
+            xe = round(newX, 1)
+            ye = round(newY, 1)
       
-        x2 = punto2[0]
-        y2 = punto2[1]
-        
-        newX = (x1+x2)/2
-        newY = (y1+y2)/2
-        
-        xe = round(newX, 1)
-        ye = round(newY, 1)
-  
-        x.append(xe)
-        y.append(ye)
-        
-
-        #BUSCANDO EL NUEVO RADIO   
-            #PROBAR CON TODOS LOS PUNTOS DEL CLUSTER, EN VEZ DE 3 Aleatorios
-        p = 3
-        
-        if len(puntos) < 3:
-            p = len(puntos)
-
-        tresPuntos = random.sample(puntos, p) #cojo tres puntos aleatorios, ya que con los tres mejores puntos el algoritmo se quedaba pillado en algunos puntos
-        
-        distanciaDePuntoACentro = 0
-        
-        for j in range(0, len(tresPuntos)):
+            xf.append(xe)
+            yf.append(ye)
             
-            punto = tresPuntos[j]
+            #BUSCANDO EL NUEVO RADIO   
             
-            varX = punto[0]
-            varY = punto[1]
+            p = 3
             
-            distanciaDePuntoACentro = math.sqrt(((x[i] - varX)*(x[i] - varX)) + ((y[i] - varY)*(y[i] - varY))) + distanciaDePuntoACentro
-                       
-        nuevoRadio = distanciaDePuntoACentro/len(tresPuntos) 
-            
-        ra = round(nuevoRadio, 1)    
-            
-        r.append(ra)
-        
-        
-        print("El nuevo centro de la circunferencia", i+1, "es:", x[i], ",", y[i])
-        print("El nuevo radio de la circunferencia", i+1, "es:", r[i])
-        
-        print("------------------------------------------------------------------------------------")
+            if len(puntos) < 3:
+                p = len(puntos)
     
-    return x, y, r
+            tresPuntos = random.sample(puntos, p) #cojo tres puntos aleatorios, ya que con los tres mejores puntos el algoritmo se quedaba pillado en algunos puntos
+            
+            distanciaDePuntoACentro = 0
+            
+            for j in range(0, len(tresPuntos)):
+                
+                punto = tresPuntos[j]
+                
+                varX = punto[0]
+                varY = punto[1]
+                
+                distanciaDePuntoACentro = math.sqrt(((xf[i] - varX)*(xf[i] - varX)) + ((yf[i] - varY)*(yf[i] - varY))) + distanciaDePuntoACentro
+                           
+            nuevoRadio = distanciaDePuntoACentro/len(tresPuntos) 
+                
+            ra = round(nuevoRadio, 1)    
+                
+            rf.append(ra)
+            
+            print("El nuevo centro de la circunferencia", i+1, "es:", xf[i], ",", yf[i])
+            print("El nuevo radio de la circunferencia", i+1, "es:", rf[i])
+            
+            print("------------------------------------------------------------------------------------")
+            
+        else:
+            
+            xf.append(x[i])
+            yf.append(y[i])
+            rf.append(r[i])
+               
+            print("El nuevo centro de la circunferencia", i+1, "es:", xf[i], ",", yf[i])
+            print("El nuevo radio de la circunferencia", i+1, "es:", rf[i])
+            
+            print("------------------------------------------------------------------------------------")
+    
+    return xf, yf, rf
     
 def calculaGradosPertenencias(puntosTotales, x, y, radios, n_clusters):
     
@@ -469,8 +475,6 @@ def calculaGradosPertenencias(puntosTotales, x, y, radios, n_clusters):
     
         gradosPertenenciaPorPuntosNORMALIZADOS.append(gradosPertenenciaNormalizados)
         
-    print("dsfsdfsdfs",gradosPertenenciaPorPuntosNORMALIZADOS)
-
     for i in range(n_clusters): #Recorro cada cluster, y comparo cada grado de cada punto y lo añado o no si pertenece a ese cluster
         
         puntosPertenecientesAlCluster = []
@@ -587,14 +591,56 @@ def inicializacion(n_clusters, url_datos): #Inicializa los circulos según un n�
     return x, y, radios
     
 def representacionGrafica(x, y, radios, puntosPorCluster):  #Hay que dar los centros y los radios 
-
+        
+    #Cálculo del tamaño de la gráfica
+    
+    todasLasX = []
+    todasLasY = []
+    
+    for p in range (0, len(puntosPorCluster)):
+        
+        puntos = puntosPorCluster[p]
+    
+        for l in range (0, len(puntos)):
+            
+            punto = puntos[l]
+            
+            varX = punto[0]
+            varY = punto[1]
+            
+            todasLasX.append(int(varX))
+            todasLasY.append(int(varY))
+            
+           
+    print(todasLasY)
+    print(min(todasLasY))
+    
+    maxX = max(todasLasX)
+    maxY = max(todasLasY) 
+    
+    minX = min(todasLasX)
+    minY = min(todasLasY)   
+    
+    fmax = 0
+    fmin = 0
+        
+    if maxY > maxX:
+        fmax = maxY + 1
+    else:
+        fmax = maxX + 1
+        
+    if minY < minX:
+        fmin = minY - 1
+    else:
+        fmin = minX - 1
+            
     fig = plt.figure(figsize = (6,6))
-
+    
     ax = fig.add_subplot()
     ax.set_xlabel('X', fontsize = 15)
     ax.set_ylabel('Y', fontsize = 15)
-    ax.set_xlim(-2,28)
-    ax.set_ylim(-2,28)
+    ax.set_xlim(fmin,fmax)
+    ax.set_ylim(fmin,fmax)
     ax.set_title('Círculos', fontsize = 20)
     
     colores = ["r", "b", "g", "y", "p"]
@@ -628,34 +674,48 @@ def buscandoAproximarLasCircunferencias(n_cluster, url_datos): #Calculo del grad
 
     puntosCSV = pd.read_csv(url_datos, header=None, names=['X', 'Y'])
     
-    valorParada = 0.019 #Valor que mejor me aproxima los ejemplos proporcionados
+    valorParada = 0.01 #Valor que mejor me aproxima los ejemplos proporcionados
     
     sumGradosTotal = 10 #Para los ejemplos de una circunferencia
     
     counter = 1
     
-    max_interacciones = 3000 #Para que no se eternice
+    max_interacciones = 6000 #Para que no se eternice
     
+    cambio = []
     
-    while (sumGradosTotal > valorParada) and (max_interacciones > counter):
+    terminamos = True
+    
+    for j in range(0, n_cluster):
         
+        cambio.append(True)
+    
+    #while (sumGradosTotal > valorParada) and (max_interacciones > counter):
+    while terminamos and (max_interacciones > counter):   
         print("Ciclo", counter)
         print("========")
-        
-        condicion = True
         
         counter = counter + 1
         
         puntosPorCluster, gradosPorCluster = calculaGradosPertenencias(puntosCSV, x, y, radios, n_cluster)
-        
+              
         #CONDICIÓN DE PARADA
         for i in range(n_cluster):
             
             mediaGradosCluster = sum(gradosPorCluster[i])/(len(gradosPorCluster[i])) #F1
             
-            sumGradosTotal =  sumGradosTotal + mediaGradosCluster #F1
+            sumGradosTotal =  sumGradosTotal + mediaGradosCluster #F1    
             
-            print("Cluster", i, ":", mediaGradosCluster)
+            if mediaGradosCluster < 0.003:
+                cambio[i] = False
+                
+            print("Cluster", i, ":", mediaGradosCluster, "Cambio:", cambio[i])
+            print("------------------------------------------------------------------------------------")
+            
+            if True in cambio:
+                terminamos = True
+            else:
+                terminamos = False    
             
         sumGradosTotal = sumGradosTotal/len(gradosPorCluster) #Esta es la media de grados juntando todos los cluster #F1
         
@@ -670,7 +730,7 @@ def buscandoAproximarLasCircunferencias(n_cluster, url_datos): #Calculo del grad
         #x, y, radios = nuevasCircunferencias(puntosCSV, puntosPorCluster, gradosPorCluster, n_cluster)
         #x, y, radios = nuevasCircunferenciasV2(puntosPorCluster)
         #x, y, radios = nuevasCircunferenciasV3(puntosPorCluster)
-        x, y, radios = nuevasCircunferenciasV4(puntosCSV, puntosPorCluster, gradosPorCluster, n_cluster)
+        x, y, radios = nuevasCircunferenciasV4(puntosPorCluster, cambio, x, y, radios)
        
         #representacionGrafica(x, y, radios, puntosPorCluster)
 
@@ -782,7 +842,7 @@ def generadorDeEjemplosEspecificos(nombre, n_clusters, centrosJuntos, radiosJunt
 
         plt.show()
 
-def generadorDeEjemplosAleatorios(nombre, n_clusters, n_min, n_max, ruido): #Genera ejemplo
+def generadorDeEjemplosAleatorios(nombre, n_clusters, ruido): #Genera ejemplo
     
     x = [] #Aqui almacenaré el valor de las X de los puntos
     y = [] #Aqui almacenaré el valor de las Y de los puntos
@@ -793,7 +853,7 @@ def generadorDeEjemplosAleatorios(nombre, n_clusters, n_min, n_max, ruido): #Gen
         x0 = random.uniform(-10, 10)
         y0 = random.uniform(-10, 10)
         
-        numPuntosPorCluster = random.randint(int(n_min), int(n_max)) #Número de puntos por cluster
+        numPuntosPorCluster = random.randint(20, 40) #Número de puntos por cluster
         
         #Obteniendo los puntos
         
@@ -1044,11 +1104,11 @@ def ventana_generador():
     
     chks = tkinter.BooleanVar()
        
+    checky = tkinter.Checkbutton(ventanaGen, text = "Aplicar ruido", variable = chks,  font = "Gabriola 16 bold", bg='#FFD1A0', activebackground="#FFD1A0", selectcolor = "#FFB96F", command= select)  
     tkinter.Label(ventanaGen, text = "Nombre:", anchor= "e", font = "Gabriola 16 bold", bg='#FFD1A0', width = 30).grid(row=1)
     tkinter.Label(ventanaGen, text = "Número de circunferencias:", anchor= "e", font = "Gabriola 16 bold", bg='#FFD1A0', width = 30).grid(row=2)
     tkinter.Label(ventanaGen, text = "Número mínimo de puntos por cluster:", anchor= "e", font = "Gabriola 16 bold", bg='#FFD1A0', width = 30).grid(row=3)
-    tkinter.Label(ventanaGen, text = "Número máximo de puntos por cluster:", anchor= "e", font = "Gabriola 16 bold", bg='#FFD1A0', width = 30).grid(row=4) 
-    checky = tkinter.Checkbutton(ventanaGen, text = "Aplicar ruido", variable = chks,  font = "Gabriola 16 bold", bg='#FFD1A0', activebackground="#FFD1A0", selectcolor = "#FFB96F", command= select)
+    tkinter.Label(ventanaGen, text = "Número máximo de puntos por cluster:", anchor= "e", font = "Gabriola 16 bold", bg='#FFD1A0', width = 30).grid(row=4)    
     tkinter.Label(ventanaGen, text = "Centros (Opcional):", anchor= "e", font = "Gabriola 16 bold", bg='#FFD1A0', width = 30).grid(row=7)
     tkinter.Label(ventanaGen, text = "Radios (Opcional):", anchor= "e", font = "Gabriola 16 bold", bg='#FFD1A0', width = 30).grid(row=8)
     
@@ -1081,20 +1141,18 @@ def ventana_generador():
     checky.bind("<Return>", generar)  
     
     #Generar
-    
     botonAceptar = tkinter.Button(ventanaGen, text = "Generar", font=('MV Boli', '10'), bg="#98D37E", activebackground="#B9F0A1", command = lambda: generar("<Return>"), padx = 10).grid(row = 10, column = 2) 
     
     #Espacios en blanco
-    
     tkinter.Label(ventanaGen, bg = "#FFD1A0").grid(row=9)
     tkinter.Label(ventanaGen, bg = "#FFD1A0", width = 5).grid(column=1)
     tkinter.Label(ventanaGen, bg = "#FFD1A0").grid(row=6)
     tkinter.Label(ventanaGen, bg = "#FFD1A0").grid(row=0)
        
 if __name__ == "__main__":
-    #probando()
+    #generadorDeEjemplosAleatorios("eyRuido", 3, True)
     #ventana_principal()
-    buscandoAproximarLasCircunferencias(3, "C:/Users/Rafa/git/ClusteringBajoIncertidumbreIA/puntos2.csv")
+    buscandoAproximarLasCircunferencias(3, "C:/Users/Rafa/git/ClusteringBajoIncertidumbreIA/miramira.csv")
     
    
     
